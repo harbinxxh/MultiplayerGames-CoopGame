@@ -3,6 +3,7 @@
 #include "SWeapon.h"
 #include "DrawDebugHelpers.h"
 #include "Kismet/GameplayStatics.h"
+#include "Particles/ParticleSystem.h"
 
 
 // Sets default values
@@ -13,6 +14,8 @@ ASWeapon::ASWeapon()
 
 	MeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshComp"));
 	RootComponent = MeshComp;
+
+	MuzzleSocketName = "MuzzleSocket";
 }
 
 // Called when the game starts or when spawned
@@ -59,9 +62,41 @@ void ASWeapon::Fire()
 			* @return Actual damage the ended up being applied to the actor.
 			*/
 			UGameplayStatics::ApplyPointDamage(HitActor, 20.f, ShotDirection, Hit, MyOwner->GetInstigatorController(), this, DamageType);
+
+
+			if (ImpactEffect)
+			{
+				/** Plays the specified effect at the given location and rotation, fire and forget. The system will go away when the effect is complete. Does not replicate.
+				* @param WorldContextObject - Object that we can obtain a world context from
+				* @param EmitterTemplate - particle system to create
+				* @param Location - location to place the effect in world space
+				* @param Rotation - rotation to place the effect in world space
+				* @param Scale - scale to create the effect at
+				* @param bAutoDestroy - Whether the component will automatically be destroyed when the particle system completes playing or whether it can be reactivated
+				* @param PoolingMethod - Method used for pooling this component. Defaults to none.
+				*/
+				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactEffect, Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
+			}
 		}
 
 		DrawDebugLine(GetWorld(), EyeLocation, TraceEnd, FColor::Red, false, 1.0f, 0, 1.0f);
+
+		if (MuzzleEffect)
+		{
+			/** Plays the specified effect attached to and following the specified component. The system will go away when the effect is complete. Does not replicate.
+			* @param EmitterTemplate - particle system to create
+			* @param AttachComponent - Component to attach to.
+			* @param AttachPointName - Optional named point within the AttachComponent to spawn the emitter at
+			* @param Location - Depending on the value of LocationType this is either a relative offset from the attach component/point or an absolute world location that will be translated to a relative offset (if LocationType is KeepWorldPosition).
+			* @param Rotation - Depending on the value of LocationType this is either a relative offset from the attach component/point or an absolute world rotation that will be translated to a relative offset (if LocationType is KeepWorldPosition).
+			* @param Scale - Depending on the value of LocationType this is either a relative scale from the attach component or an absolute world scale that will be translated to a relative scale (if LocationType is KeepWorldPosition).
+			* @param LocationType - Specifies whether Location is a relative offset or an absolute world position
+			* @param bAutoDestroy - Whether the component will automatically be destroyed when the particle system completes playing or whether it can be reactivated
+			* @param PoolingMethod - Method used for pooling this component. Defaults to none.
+			*/
+			UGameplayStatics::SpawnEmitterAttached(MuzzleEffect, MeshComp, MuzzleSocketName);
+		}
+
 	}
 }
 
