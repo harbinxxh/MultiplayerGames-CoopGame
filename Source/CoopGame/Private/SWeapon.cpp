@@ -70,7 +70,7 @@ void ASWeapon::Fire()
 			*/
 			UGameplayStatics::ApplyPointDamage(HitActor, 20.f, ShotDirection, Hit, MyOwner->GetInstigatorController(), this, DamageType);
 
-
+			// 击中模型的特效
 			if (ImpactEffect)
 			{
 				/** Plays the specified effect at the given location and rotation, fire and forget. The system will go away when the effect is complete. Does not replicate.
@@ -90,6 +90,7 @@ void ASWeapon::Fire()
 
 		DrawDebugLine(GetWorld(), EyeLocation, TraceEnd, FColor::White, false, 1.0f, 0, 1.0f);
 
+		// 枪口火花特效
 		if (MuzzleEffect)
 		{
 			/** Plays the specified effect attached to and following the specified component. The system will go away when the effect is complete. Does not replicate.
@@ -106,6 +107,7 @@ void ASWeapon::Fire()
 			UGameplayStatics::SpawnEmitterAttached(MuzzleEffect, MeshComp, MuzzleSocketName);
 		}
 
+		// 横梁烟雾效果(Smoke Beam Effect)
 		if (TracerEffect)
 		{
 			FVector MuzzleLocation = MeshComp->GetSocketLocation(MuzzleSocketName);
@@ -115,7 +117,6 @@ void ASWeapon::Fire()
 				TracerComp->SetVectorParameter(TracerTargetName, TraceEndPoint);
 			}
 		}
-		
 	}
 }
 
