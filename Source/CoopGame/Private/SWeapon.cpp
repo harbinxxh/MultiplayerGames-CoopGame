@@ -17,9 +17,6 @@ FAutoConsoleVariableRef CVARDebugWeaponDrawing(
 // Sets default values
 ASWeapon::ASWeapon()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-
 	MeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshComp"));
 	RootComponent = MeshComp;
 
@@ -27,12 +24,6 @@ ASWeapon::ASWeapon()
 	TracerTargetName = "Target";
 }
 
-// Called when the game starts or when spawned
-void ASWeapon::BeginPlay()
-{
-	Super::BeginPlay();
-	
-}
 
 void ASWeapon::Fire()
 {
@@ -99,40 +90,38 @@ void ASWeapon::Fire()
 			DrawDebugLine(GetWorld(), EyeLocation, TraceEnd, FColor::White, false, 1.0f, 0, 1.0f);
 		}
 
-		// 枪口火花特效
-		if (MuzzleEffect)
-		{
-			/** Plays the specified effect attached to and following the specified component. The system will go away when the effect is complete. Does not replicate.
-			* @param EmitterTemplate - particle system to create
-			* @param AttachComponent - Component to attach to.
-			* @param AttachPointName - Optional named point within the AttachComponent to spawn the emitter at
-			* @param Location - Depending on the value of LocationType this is either a relative offset from the attach component/point or an absolute world location that will be translated to a relative offset (if LocationType is KeepWorldPosition).
-			* @param Rotation - Depending on the value of LocationType this is either a relative offset from the attach component/point or an absolute world rotation that will be translated to a relative offset (if LocationType is KeepWorldPosition).
-			* @param Scale - Depending on the value of LocationType this is either a relative scale from the attach component or an absolute world scale that will be translated to a relative scale (if LocationType is KeepWorldPosition).
-			* @param LocationType - Specifies whether Location is a relative offset or an absolute world position
-			* @param bAutoDestroy - Whether the component will automatically be destroyed when the particle system completes playing or whether it can be reactivated
-			* @param PoolingMethod - Method used for pooling this component. Defaults to none.
-			*/
-			UGameplayStatics::SpawnEmitterAttached(MuzzleEffect, MeshComp, MuzzleSocketName);
-		}
-
-		// 横梁烟雾效果(Smoke Beam Effect)
-		if (TracerEffect)
-		{
-			FVector MuzzleLocation = MeshComp->GetSocketLocation(MuzzleSocketName);
-			UParticleSystemComponent* TracerComp = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), TracerEffect, MuzzleLocation);
-			if (TracerComp)
-			{
-				TracerComp->SetVectorParameter(TracerTargetName, TraceEndPoint);
-			}
-		}
+		PlayFireEffects(TraceEndPoint);
 	}
 }
 
-// Called every frame
-void ASWeapon::Tick(float DeltaTime)
+void ASWeapon::PlayFireEffects(FVector TraceEnd)
 {
-	Super::Tick(DeltaTime);
+	// 枪口火花特效
+	if (MuzzleEffect)
+	{
+		/** Plays the specified effect attached to and following the specified component. The system will go away when the effect is complete. Does not replicate.
+		* @param EmitterTemplate - particle system to create
+		* @param AttachComponent - Component to attach to.
+		* @param AttachPointName - Optional named point within the AttachComponent to spawn the emitter at
+		* @param Location - Depending on the value of LocationType this is either a relative offset from the attach component/point or an absolute world location that will be translated to a relative offset (if LocationType is KeepWorldPosition).
+		* @param Rotation - Depending on the value of LocationType this is either a relative offset from the attach component/point or an absolute world rotation that will be translated to a relative offset (if LocationType is KeepWorldPosition).
+		* @param Scale - Depending on the value of LocationType this is either a relative scale from the attach component or an absolute world scale that will be translated to a relative scale (if LocationType is KeepWorldPosition).
+		* @param LocationType - Specifies whether Location is a relative offset or an absolute world position
+		* @param bAutoDestroy - Whether the component will automatically be destroyed when the particle system completes playing or whether it can be reactivated
+		* @param PoolingMethod - Method used for pooling this component. Defaults to none.
+		*/
+		UGameplayStatics::SpawnEmitterAttached(MuzzleEffect, MeshComp, MuzzleSocketName);
+	}
 
+	// 横梁烟雾效果(Smoke Beam Effect)
+	if (TracerEffect)
+	{
+		FVector MuzzleLocation = MeshComp->GetSocketLocation(MuzzleSocketName);
+		UParticleSystemComponent* TracerComp = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), TracerEffect, MuzzleLocation);
+		if (TracerComp)
+		{
+			TracerComp->SetVectorParameter(TracerTargetName, TraceEnd);
+		}
+	}
 }
 
