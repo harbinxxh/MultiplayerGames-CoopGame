@@ -25,6 +25,8 @@ ASWeapon::ASWeapon()
 
 	MuzzleSocketName = "MuzzleSocket";
 	TracerTargetName = "Target";
+
+	BaseDamage = 20.f;
 }
 
 void ASWeapon::Fire()
@@ -52,25 +54,22 @@ void ASWeapon::Fire()
 		FVector TraceEndPoint = TraceEnd;
 
 		FHitResult Hit;
-		if (GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, ECollisionChannel::ECC_Visibility, QueryParams))
+		if (GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, COLLISION_WEAPON, QueryParams))
 		{
 			// Blocking hit! Process damage
 
 			AActor* HitActor = Hit.GetActor();
 
-			/** Hurts the specified actor with the specified impact.
-			* @param DamagedActor - Actor that will be damaged.
-			* @param BaseDamage - The base damage to apply.
-			* @param HitFromDirection - Direction the hit came FROM
-			* @param HitInfo - Collision or trace result that describes the hit
-			* @param EventInstigator - Controller that was responsible for causing this damage (e.g. player who shot the weapon)
-			* @param DamageCauser - Actor that actually caused the damage (e.g. the grenade that exploded)
-			* @param DamageTypeClass - Class that describes the damage that was done.
-			* @return Actual damage the ended up being applied to the actor.
-			*/
-			UGameplayStatics::ApplyPointDamage(HitActor, 20.f, ShotDirection, Hit, MyOwner->GetInstigatorController(), this, DamageType);
-			
 			EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
+
+			float ActualDamage = BaseDamage;
+			if (SurfaceType == SURFACE_FLESHVULNERABLE)
+			{
+				ActualDamage *= 4.0f;
+			}
+
+			UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, ShotDirection, Hit, MyOwner->GetInstigatorController(), this, DamageType);
+			
 			UParticleSystem* SelectedEffect = nullptr;
 			switch (SurfaceType)
 			{
