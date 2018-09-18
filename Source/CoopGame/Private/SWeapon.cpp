@@ -63,7 +63,7 @@ void ASWeapon::Fire()
 			EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
 
 			float ActualDamage = BaseDamage;
-			if (SurfaceType == SURFACE_FLESHVULNERABLE)
+			if (SurfaceType == SURFACE_FLESHVULNERABLE) // 通过Physical Surface来设置不同的伤害
 			{
 				ActualDamage *= 4.0f;
 			}
