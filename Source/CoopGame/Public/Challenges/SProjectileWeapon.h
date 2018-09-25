@@ -15,6 +15,8 @@ class COOPGAME_API ASProjectileWeapon : public ASWeapon
 	GENERATED_BODY()
 	
 protected:
+
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	virtual void Fire() override;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "ProjectileWeapon")
