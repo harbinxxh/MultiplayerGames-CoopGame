@@ -9,7 +9,6 @@ USHealthComponent::USHealthComponent()
 	DefaultHealth = 100;
 }
 
-
 // Called when the game starts
 void USHealthComponent::BeginPlay()
 {
