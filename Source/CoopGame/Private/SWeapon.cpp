@@ -9,6 +9,7 @@
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "CoopGame.h"
 #include "TimerManager.h"
+#include "Net/UnrealNetwork.h"
 
 
 static int32 DebugWeaponDrawing = 0;
@@ -30,6 +31,8 @@ ASWeapon::ASWeapon()
 	BaseDamage = 20.f;
 
 	RateOfFire = 600;
+
+	SetReplicates(true);
 }
 
 void ASWeapon::BeginPlay()
