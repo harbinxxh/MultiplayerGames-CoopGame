@@ -111,6 +111,8 @@ void ASWeapon::Fire()
 				* @param bAutoDestroy - Whether the component will automatically be destroyed when the particle system completes playing or whether it can be reactivated
 				* @param PoolingMethod - Method used for pooling this component. Defaults to none.
 				*/
+
+				// 在指定的位置播放指定的效果，并旋转、射击和遗忘。当效果完成时，系统就会消失。不复制。
 				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectedEffect, Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
 			}
 
@@ -123,9 +125,22 @@ void ASWeapon::Fire()
 		}
 
 		PlayFireEffects(TraceEndPoint);
+		
+		// 最重要的一件事， 当在服务器射击时，需要更新 FHitScanTrace 结构变量
+		if (Role == ROLE_Authority)
+		{
+			HitScanTrace.TraceTo = TraceEndPoint;
+		}
 
 		LastFireTime = GetWorld()->TimeSeconds;
 	}
+}
+
+void ASWeapon::OnRep_HitScanTrace()
+{
+	// This whole struct gets replicated to all the clients we replace some fire effects.
+	// Play Cosmetic FX
+	PlayFireEffects(HitScanTrace.TraceTo);
 }
 
 void ASWeapon::ServerFire_Implementation()
@@ -192,3 +207,12 @@ void ASWeapon::PlayFireEffects(FVector TraceEnd)
 	}
 }
 
+void ASWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	// 条件说明： Because I would not want to replicate this to the clients that owns this weapon.
+	// 所以我不需要把它发送到服务器然后再通过服务器接收它
+	// 因为我们已经执行了代码所以它会运行两次视觉效果
+	DOREPLIFETIME_CONDITION(ASWeapon, HitScanTrace, COND_SkipOwner);
+}
