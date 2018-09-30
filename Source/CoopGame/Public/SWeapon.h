@@ -18,8 +18,9 @@ struct FHitScanTrace
 
 public:
 
+	// TEnumAsByte 以一种类型安全的方式将枚举值存储为字节的模板。
 	UPROPERTY()
-	FVector_NetQuantize TraceFrom;
+	TEnumAsByte<EPhysicalSurface> SurfaceType;
 	
 	UPROPERTY()
 	FVector_NetQuantize TraceTo;
@@ -43,6 +44,8 @@ protected:
 	USkeletalMeshComponent* MeshComp;
 
 	void PlayFireEffects(FVector TraceEnd);
+
+	void PlayImpactEffects(EPhysicalSurface SurfaceType, FVector ImpactPoint);
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 	TSubclassOf<UDamageType> DamageType;

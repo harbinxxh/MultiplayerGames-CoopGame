@@ -33,6 +33,9 @@ ASWeapon::ASWeapon()
 	RateOfFire = 600;
 
 	SetReplicates(true);
+
+	NetUpdateFrequency = 66.0f;		// How often (per second) this actor will be considered for replication, used to determine NetUpdateTime
+	MinNetUpdateFrequency = 33.0f;	// Used to determine what rate to throttle down to when replicated properties are changing infrequently
 }
 
 void ASWeapon::BeginPlay()
@@ -71,14 +74,15 @@ void ASWeapon::Fire()
 		// Paticle "Target" parameter
 		FVector TraceEndPoint = TraceEnd;
 
+		EPhysicalSurface SurfaceType = EPhysicalSurface::SurfaceType_Default;
+
 		FHitResult Hit;
 		if (GetWorld()->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, COLLISION_WEAPON, QueryParams))
 		{
 			// Blocking hit! Process damage
-
 			AActor* HitActor = Hit.GetActor();
 
-			EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
+			SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
 
 			float ActualDamage = BaseDamage;
 			if (SurfaceType == SURFACE_FLESHVULNERABLE) // 通过Physical Surface来设置不同的伤害
@@ -88,33 +92,7 @@ void ASWeapon::Fire()
 
 			UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, ShotDirection, Hit, MyOwner->GetInstigatorController(), this, DamageType);
 			
-			UParticleSystem* SelectedEffect = nullptr;
-			switch (SurfaceType)
-			{
-			case SURFACE_FLESHDEFAULT:
-			case SURFACE_FLESHVULNERABLE:
-				SelectedEffect = FleshImpactEffect;
-				break;
-			default:
-				SelectedEffect = DefaultImpactEffect;
-				break;
-			}
-			
-			if (SelectedEffect) // 击中模型的特效
-			{
-				/** Plays the specified effect at the given location and rotation, fire and forget. The system will go away when the effect is complete. Does not replicate.
-				* @param WorldContextObject - Object that we can obtain a world context from
-				* @param EmitterTemplate - particle system to create
-				* @param Location - location to place the effect in world space
-				* @param Rotation - rotation to place the effect in world space
-				* @param Scale - scale to create the effect at
-				* @param bAutoDestroy - Whether the component will automatically be destroyed when the particle system completes playing or whether it can be reactivated
-				* @param PoolingMethod - Method used for pooling this component. Defaults to none.
-				*/
-
-				// 在指定的位置播放指定的效果，并旋转、射击和遗忘。当效果完成时，系统就会消失。不复制。
-				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectedEffect, Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
-			}
+			PlayImpactEffects(SurfaceType, Hit.ImpactPoint);
 
 			TraceEndPoint = Hit.ImpactPoint;
 		}
@@ -130,6 +108,7 @@ void ASWeapon::Fire()
 		if (Role == ROLE_Authority)
 		{
 			HitScanTrace.TraceTo = TraceEndPoint;
+			HitScanTrace.SurfaceType = SurfaceType;
 		}
 
 		LastFireTime = GetWorld()->TimeSeconds;
@@ -141,6 +120,8 @@ void ASWeapon::OnRep_HitScanTrace()
 	// This whole struct gets replicated to all the clients we replace some fire effects.
 	// Play Cosmetic FX
 	PlayFireEffects(HitScanTrace.TraceTo);
+
+	PlayImpactEffects(HitScanTrace.SurfaceType, HitScanTrace.TraceTo);
 }
 
 void ASWeapon::ServerFire_Implementation()
@@ -204,6 +185,31 @@ void ASWeapon::PlayFireEffects(FVector TraceEnd)
 		{
 			PC->ClientPlayCameraShake(FireCamShake);
 		}
+	}
+}
+
+void ASWeapon::PlayImpactEffects(EPhysicalSurface SurfaceType, FVector ImpactPoint)
+{
+	UParticleSystem* SelectedEffect = nullptr;
+	switch (SurfaceType)
+	{
+	case SURFACE_FLESHDEFAULT:
+	case SURFACE_FLESHVULNERABLE:
+		SelectedEffect = FleshImpactEffect;
+		break;
+	default:
+		SelectedEffect = DefaultImpactEffect;
+		break;
+	}
+
+	if (SelectedEffect) // 击中模型的特效
+	{
+		FVector MuzzleLocation = MeshComp->GetSocketLocation(MuzzleSocketName);
+		FVector ShotDirction = ImpactPoint - MuzzleLocation;
+		ShotDirction.Normalize();
+
+		// 在指定的位置播放指定的效果，并旋转、射击和遗忘。当效果完成时，系统就会消失。不复制。
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectedEffect, ImpactPoint, ShotDirction.Rotation());
 	}
 }
 
