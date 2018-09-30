@@ -28,8 +28,8 @@ ASExplosiveBarrel::ASExplosiveBarrel()
 
 	ExplosionImpulse = 400;
 
-	//SetReplicates(true);
-	//SetReplicateMovement(true);
+	SetReplicates(true);
+	SetReplicateMovement(true);
 }
 
 void ASExplosiveBarrel::OnHealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
@@ -44,16 +44,16 @@ void ASExplosiveBarrel::OnHealthChanged(USHealthComponent* OwningHealthComp, flo
 	{
 		// Explode!
 		bExploded = true;
-		//OnRep_Exploded();
+		OnRep_Exploded();
 
 		// Boost the barrel upwards
 		FVector BoostIntensity = FVector::UpVector * ExplosionImpulse;
 		MeshComp->AddImpulse(BoostIntensity, NAME_None, true);
 
-		// Play FX and change self material to black
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, GetActorLocation());
-		// Override meterial on mesh with blackened version
-		MeshComp->SetMaterial(0, ExplodedMaterial);
+		//// Play FX and change self material to black
+		//UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, GetActorLocation());
+		//// Override meterial on mesh with blackened version
+		//MeshComp->SetMaterial(0, ExplodedMaterial);
 
 		// Blast away nearby physics actors
 		RadialForceComp->FireImpulse();
@@ -62,17 +62,17 @@ void ASExplosiveBarrel::OnHealthChanged(USHealthComponent* OwningHealthComp, flo
 	}
 }
 
-//void ASExplosiveBarrel::OnRep_Exploded()
-//{
-//	// Play FX and change self material to black
-//	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, GetActorLocation());
-//	// Override meterial on mesh with blackened version
-//	MeshComp->SetMaterial(0, ExplodedMaterial);
-//}
+void ASExplosiveBarrel::OnRep_Exploded()
+{
+	// Play FX and change self material to black
+	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, GetActorLocation());
+	// Override meterial on mesh with blackened version
+	MeshComp->SetMaterial(0, ExplodedMaterial);
+}
 
-//void ASExplosiveBarrel::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-//{
-//	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-//
-//	DOREPLIFETIME(ASExplosiveBarrel, bExploded);
-//}
+void ASExplosiveBarrel::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ASExplosiveBarrel, bExploded);
+}
