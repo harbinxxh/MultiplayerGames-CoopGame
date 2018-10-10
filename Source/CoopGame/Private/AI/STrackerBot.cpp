@@ -10,6 +10,8 @@
 #include "SHealthComponent.h"
 #include "Components/SphereComponent.h"
 #include "SCharacter.h"
+#include "Sound/SoundCue.h"
+
 
 
 // Sets default values
@@ -39,6 +41,8 @@ ASTrackerBot::ASTrackerBot()
 
 	ExplosionDamage = 40;
 	ExplosionRadius = 200;
+
+	SelfDamageInterval = 0.25f;
 }
 
 // Called when the game starts or when spawned
@@ -96,6 +100,9 @@ void ASTrackerBot::SelfDestruct()
 		return;
 	}
 	bExploded = true;
+
+	// 在指定的位置播放声音文件
+	UGameplayStatics::PlaySoundAtLocation(this, ExplodeSound, GetActorLocation());
 
 	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, GetActorLocation());
 
@@ -158,10 +165,14 @@ void ASTrackerBot::NotifyActorBeginOverlap(AActor* OtherActor)
 			// We overlapped with a player!
 
 			// Start self destruction sequence
-			GetWorldTimerManager().SetTimer(TimerHandle_SelfDamage, this, &ASTrackerBot::DamageSelf, 0.5f, true, 0.0f);
+			GetWorldTimerManager().SetTimer(TimerHandle_SelfDamage, this, &ASTrackerBot::DamageSelf, SelfDamageInterval, true, 0.0f);
 		}
 
 		bStartedSelfDestruction = true;
+
+		// Plays a sound attached to and following the specified component. This is a fire and forget sound. Replication is also not handled at this point.
+		// 播放绑定到组件上的声音文件
+		UGameplayStatics::SpawnSoundAttached(SelfDestructSound, RootComponent);
 	}
 }
 

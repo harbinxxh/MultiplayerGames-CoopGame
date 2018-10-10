@@ -24,6 +24,7 @@ void USHealthComponent::BeginPlay()
 		AActor* MyOwner = GetOwner();
 		if (MyOwner)
 		{
+			// OnTakeAnyDamage : Called when the actor is damaged in any way
 			MyOwner->OnTakeAnyDamage.AddDynamic(this, &USHealthComponent::HandleTakeAnyDamage);
 		}
 	}
