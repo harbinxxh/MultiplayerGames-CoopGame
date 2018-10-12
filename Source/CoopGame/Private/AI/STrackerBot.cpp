@@ -109,16 +109,25 @@ void ASTrackerBot::SelfDestruct()
 
 	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, GetActorLocation());
 
-	TArray<AActor*> IgnoredActors;
-	IgnoredActors.Add(this);
+	MeshComp->SetVisibility(false, true);
+	MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-	// Apply Damage!
-	UGameplayStatics::ApplyRadialDamage(this, ExplosionDamage, GetActorLocation(), ExplosionRadius, nullptr, IgnoredActors, this, GetInstigatorController(), true);
+	if (Role == ROLE_Authority)
+	{
+		TArray<AActor*> IgnoredActors;
+		IgnoredActors.Add(this);
 
-	DrawDebugSphere(GetWorld(), GetActorLocation(), ExplosionRadius, 12, FColor::Red, false, 2.0f, 0, 1.0f);
+		// Apply Damage!
+		UGameplayStatics::ApplyRadialDamage(this, ExplosionDamage, GetActorLocation(), ExplosionRadius, nullptr, IgnoredActors, this, GetInstigatorController(), true);
 
-	// Delete Actor immediately
-	Destroy();
+		DrawDebugSphere(GetWorld(), GetActorLocation(), ExplosionRadius, 12, FColor::Red, false, 2.0f, 0, 1.0f);
+
+		// Delete Actor immediately
+		// 多人游戏时 : that doesn't leave as much time to on a client spawn it effects I'm going to not destroy it.
+		//Destroy();
+
+		SetLifeSpan(2.0f);
+	}
 }
 
 void ASTrackerBot::DamageSelf()
@@ -131,7 +140,7 @@ void ASTrackerBot::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (Role == ROLE_Authority)
+	if (Role == ROLE_Authority && !bExploded)
 	{
 		float DistanceToTarget = (GetActorLocation() - NextPathPoint).Size();
 
@@ -163,22 +172,25 @@ void ASTrackerBot::Tick(float DeltaTime)
 
 void ASTrackerBot::NotifyActorBeginOverlap(AActor* OtherActor)
 {
-	if (!bStartedSelfDestruction)
+	if (!bStartedSelfDestruction && !bExploded)
 	{
 		ASCharacter* PlayerPawn = Cast<ASCharacter>(OtherActor);
 		if (PlayerPawn)
 		{
 			// We overlapped with a player!
 
-			// Start self destruction sequence
-			GetWorldTimerManager().SetTimer(TimerHandle_SelfDamage, this, &ASTrackerBot::DamageSelf, SelfDamageInterval, true, 0.0f);
+			if (Role == ROLE_Authority)
+			{
+				// Start self destruction sequence
+				GetWorldTimerManager().SetTimer(TimerHandle_SelfDamage, this, &ASTrackerBot::DamageSelf, SelfDamageInterval, true, 0.0f);
+			}
+
+			bStartedSelfDestruction = true;
+
+			// Plays a sound attached to and following the specified component. This is a fire and forget sound. Replication is also not handled at this point.
+			// 播放绑定到组件上的声音文件
+			UGameplayStatics::SpawnSoundAttached(SelfDestructSound, RootComponent);
 		}
-
-		bStartedSelfDestruction = true;
-
-		// Plays a sound attached to and following the specified component. This is a fire and forget sound. Replication is also not handled at this point.
-		// 播放绑定到组件上的声音文件
-		UGameplayStatics::SpawnSoundAttached(SelfDestructSound, RootComponent);
 	}
 }
 
