@@ -51,7 +51,7 @@ protected:
 	float RequiredDistanceToTarget;
 
 	// dynamic material to pulse on damage
-	UMaterialInstanceDynamic* MatIns;
+	UMaterialInstanceDynamic* MatInst;
 
 	void SelfDestruct();
 
@@ -87,4 +87,14 @@ public:
 
 	// Event when this actor overlaps another actor, for example a player walking into a trigger.
 	virtual void NotifyActorBeginOverlap(AActor* OtherActor);
+
+protected:
+
+	// CHALLENGE CODE
+
+	// Find nearby enemies and grow in 'power level' base on the amount.
+	void OnCheckNearbyBots();
+
+	// the power boost of the bot, affects damaged caused to enemies and color of the bot (range: 1 to 4)
+	int32 PowerLevel;
 };
