@@ -221,8 +221,8 @@ void ASTrackerBot::OnCheckNearbyBots()
 	// Only find Pawns (eg. players and AI bots)
 	FCollisionObjectQueryParams QueryParams;
 	// Our tracker bot's mesh component is set to Physics Body in Blueprint (default profile of physics simulated actors)
-	QueryParams.AddObjectTypesToQuery(ECC_PhysicsBody);
-	QueryParams.AddObjectTypesToQuery(ECC_Pawn);
+	QueryParams.AddObjectTypesToQuery( ECollisionChannel::ECC_PhysicsBody);
+	QueryParams.AddObjectTypesToQuery(ECollisionChannel::ECC_Pawn);
 
 	TArray<FOverlapResult> Overlaps;
 	GetWorld()->OverlapMultiByObjectType(Overlaps, GetActorLocation(), FQuat::Identity, QueryParams, CollShape);
