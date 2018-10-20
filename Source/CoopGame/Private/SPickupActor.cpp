@@ -1,9 +1,10 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "SPickupActor.h"
 #include "Components/SphereComponent.h"
 #include "Components/DecalComponent.h"
-
+#include "SPowerupActor.h"
+#include "Timermanager.h"
 
 // Sets default values
 ASPickupActor::ASPickupActor()
@@ -24,12 +25,36 @@ void ASPickupActor::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	Respawn();
+}
+
+void ASPickupActor::Respawn()
+{
+	if (PowerUpClass == nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PowerUpClass is nullptr in %s. Please update your Blueprint"), *GetName());
+		return;
+	}
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn; // Actor will spawn in desired location, regardless of collisions.
+
+	PowerUpInstance = GetWorld()->SpawnActor<ASPowerupActor>(PowerUpClass, GetTransform(), SpawnParams);
+
 }
 
 void ASPickupActor::NotifyActorBeginOverlap(AActor* OtherActor)
 {
 	Super::NotifyActorBeginOverlap(OtherActor);
 
-	// @TODO: Grant a powerup to player if available
+	if (PowerUpInstance)
+	{
+		PowerUpInstance->ActivatePowerup();
+
+		PowerUpInstance = nullptr;
+
+		// Set Timer to respawn
+		GetWorldTimerManager().SetTimer(TimerHandle_RespawnTimer, this, &ASPickupActor::Respawn, CooldownDuration);
+	}
 }
 
