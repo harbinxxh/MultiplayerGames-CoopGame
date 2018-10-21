@@ -40,7 +40,6 @@ void ASPickupActor::Respawn()
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn; // Actor will spawn in desired location, regardless of collisions.
 
 	PowerUpInstance = GetWorld()->SpawnActor<ASPowerupActor>(PowerUpClass, GetTransform(), SpawnParams);
-
 }
 
 void ASPickupActor::NotifyActorBeginOverlap(AActor* OtherActor)
