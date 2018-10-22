@@ -10,7 +10,7 @@ class USphereComponent;
 class UDecalComponent;
 class ASPowerupActor;
 
-
+  
 UCLASS()
 class COOPGAME_API ASPickupActor : public AActor
 {
@@ -30,7 +30,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	UDecalComponent* DecalComp;
 
-	UPROPERTY(EditDefaultsOnly, Category = "PickupActor")
+	// EditDefaultsOnly 只能在 ASPickupActor 的蓝图类里修改 PowerUpClass 的值。
+	// EditInstanceOnly 只能在 Editor 编辑器的详细面板中能修改 PowerUpClass 的值。
+	UPROPERTY(EditInstanceOnly, Category = "PickupActor")
 	TSubclassOf<ASPowerupActor> PowerUpClass;
 
 	ASPowerupActor* PowerUpInstance;
