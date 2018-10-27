@@ -46,10 +46,10 @@ protected:
 public:
 
 	// 这个函数将会在我们 Pickup 的时候被调用而不是在生成的时候
-	void ActivatePowerup();
+	void ActivatePowerup(AActor* ActiveFor);
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Powerups")
-	void OnActivated();
+	void OnActivated(AActor* ActiveFor);
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Powerups")
 	void OnPowerupTicked();
