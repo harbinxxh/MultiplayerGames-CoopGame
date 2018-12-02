@@ -45,9 +45,13 @@ protected:
 	// Set timer for next startwave
 	void PrepareForNextWave();
 
+	void CheckWaveState();
+
 public:
 
 	ASGameMode();
 
 	virtual void StartPlay() override;
+
+	virtual void Tick(float DeltaSeconds) override;
 };
